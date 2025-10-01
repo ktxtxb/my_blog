@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Редактировать - рецепт селедки</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #1e3a5f;
+            color: #e0e0e0;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: #2c5282;
+            padding: 20px;
+            border-bottom: 3px solid #cbd5e0;
+            margin-bottom: 30px;
+        }
+        .form-container {
+            background: #2d3748;
+            border: 2px solid #cbd5e0;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #cbd5e0;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            background: #1a202c;
+            border: 1px solid #4a90a4;
+            color: #e2e8f0;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        textarea {
+            height: 300px;
+            resize: vertical;
+        }
+        .btn {
+            background: #4a90a4;
+            color: #ffffff;
+            padding: 12px 25px;
+            text-decoration: none;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background: #63b3d1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>РЕДАКТИРОВАТЬ РЕЦЕПТ</h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="form-container">
+            <form id="postForm">
+                <div class="form-group">
+                    <label>НАЗВАНИЕ РЕЦЕПТА:</label>
+                    <input type="text" id="title" value="{{ post.title }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>РЕЦЕПТ:</label>
+                    <textarea id="content" required>{{ post.content }}</textarea>
+                </div>
+
+                <div style="text-align: center;">
+                    <button type="submit" class="btn">СОХРАНИТЬ ИЗМЕНЕНИЯ</button>
+                    <a href="/posts/{{ post.id }}" class="btn" style="background: #4a5568; color: #cbd5e0;">ОТМЕНА</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('postForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const data = {
+                title: document.getElementById('title').value,
+                content: document.getElementById('content').value
+            };
+
+            const response = await fetch('/api/posts/{{ post.id }}', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert('Рецепт обновлен!');
+                window.location.href = '/posts/{{ post.id }}';
+            } else {
+                const error = await response.json();
+                alert('Ошибка: ' + error.detail);
+            }
+        });
+    </script>
+</body>
+</html>
