@@ -1,0 +1,32 @@
+[project]
+name = "seledka-blog"
+version = "1.0.0"
+description = "Блог про селедку с рецептами"
+dependencies = [
+    "fastapi==0.104.1",
+    "uvicorn==0.24.0",
+    "jinja2==3.1.2",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.ruff]
+line-length = 88
+select = [
+    "E",
+    "F",
+    "W",
+]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[build-system]
+requires = ["setuptools", "wheel"]
