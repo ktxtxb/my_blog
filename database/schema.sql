@@ -1,9 +1,11 @@
---пользователи
+-- пользователи
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     login VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
+    hashed_password VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    is_admin BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -18,17 +20,13 @@ CREATE TABLE posts (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- категории (тэги)
-CREATE TABLE categories (
+-- лайки
+CREATE TABLE likes (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL
-);
-
--- связь постов с категориями (многие-ко-многим)
-CREATE TABLE post_categories (
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
-    category_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
-    PRIMARY KEY (post_id, category_id)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, post_id)
 );
 
 -- избранное
@@ -39,20 +37,9 @@ CREATE TABLE favorites (
     PRIMARY KEY (user_id, post_id)
 );
 
--- комментарии
-CREATE TABLE comments (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- подписки
-CREATE TABLE subscriptions (
-    subscriber_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    target_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (subscriber_id, target_user_id),
-    CHECK (subscriber_id != target_user_id)
-);
+-- Индексы для улучшения производительности
+CREATE INDEX idx_posts_author_id ON posts(author_id);
+CREATE INDEX idx_posts_created_at ON posts(created_at);
+CREATE INDEX idx_likes_post_id ON likes(post_id);
+CREATE INDEX idx_likes_user_id ON likes(user_id);
+CREATE INDEX idx_favorites_user_id ON favorites(user_id);

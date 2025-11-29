@@ -3,20 +3,27 @@ import time
 import webbrowser
 from fastapi import FastAPI
 import uvicorn
-from app.routes import users, posts, templates
+from app.routes import users, posts, templates, auth, likes, favorites
 
 app = FastAPI(title="Блог про селедку", description="API для ведения блога")
 
-
+# Подключаем роутеры
 app.include_router(users.router)
 app.include_router(posts.router)
 app.include_router(templates.router)
-
+app.include_router(auth.router)
+app.include_router(likes.router)
+app.include_router(favorites.router)
 
 def open_browser():
     """Открывает браузер после запуска сервера"""
-    time.sleep(2)
+    time.sleep(3)
     webbrowser.open("http://127.0.0.1:8001")
+
+
+@app.get("/")
+async def root():
+    return {"message": "Блог про селедку работает!"}
 
 
 @app.get("/health")
@@ -25,7 +32,7 @@ async def health_check():
 
 
 if __name__ == "__main__":
-
+    print("🚀 Запускаем блог про селедку...")
     threading.Thread(target=open_browser, daemon=True).start()
 
     uvicorn.run(

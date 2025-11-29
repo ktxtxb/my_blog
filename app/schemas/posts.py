@@ -1,19 +1,19 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
 class PostCreate(BaseModel):
-    author_id: int
-    title: str = Field(..., min_length=1, max_length=200)
-    content: str = Field(..., min_length=1)
+    title: str
+    content: str
 
 class PostUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=1, max_length=200)
-    content: Optional[str] = Field(None, min_length=1)
+    title: Optional[str] = None
+    content: Optional[str] = None
 
 class PostResponse(BaseModel):
     id: int
     author_id: int
+    author_login: str
     title: str
     content: str
     created_at: datetime
