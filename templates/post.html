@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>{{ post.title }} - СЕЛЕДКА БЛОГ</title>
+    <title>Рецепт селедки - БЛОГ СЕЛЕДКИ</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -10,7 +10,6 @@
             padding: 0;
             background: #1e3a5f;
             color: #e0e0e0;
-            text-align: center;
         }
         .container {
             max-width: 800px;
@@ -20,14 +19,31 @@
         .header {
             background: #2c5282;
             padding: 20px;
-            border-bottom: 3px solid #cbd5e0;
+            text-align: center;
             margin-bottom: 30px;
         }
-        .content {
+        .post-content {
             background: #2d3748;
             border: 2px solid #cbd5e0;
             padding: 30px;
             border-radius: 8px;
+        }
+        .post-title {
+            color: #cbd5e0;
+            border-bottom: 2px solid #4a90a4;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .post-meta {
+            color: #a0aec0;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        .post-text {
+            line-height: 1.6;
+            font-size: 16px;
             text-align: left;
         }
         .btn {
@@ -44,40 +60,219 @@
         .btn:hover {
             background: #63b3d1;
         }
-        .meta {
-            color: #a0aec0;
-            border-top: 1px solid #4a5568;
-            padding-top: 20px;
-            margin-top: 20px;
+        .btn-back {
+            background: #4a5568;
+            color: #cbd5e0;
+        }
+        .btn-danger {
+            background: #e53e3e;
+        }
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .author-badge {
+            background: #4a90a4;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        .favorite-btn {
+            background: none;
+            border: 1px solid #d69e2e;
+            color: #d69e2e;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin: 5px;
+        }
+
+        .favorite-btn:hover {
+            background: #d69e2e;
+            color: white;
+        }
+
+        .favorite-btn.active {
+            background: #d69e2e;
+            color: white;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="container">
-            <h1>СЕЛЕДОЧНЫЙ БЛОГ</h1>
+            <h1>РЕЦЕПТ СЕЛЕДКИ</h1>
         </div>
     </div>
 
     <div class="container">
-        <div class="content">
-            <a href="/" class="btn" style="background: #4a5568; color: #cbd5e0;">← НАЗАД К РЕЦЕПТАМ</a>
+        {% if post %}
+        <div class="post-content">
+            <h2 class="post-title">{{ post.title }}</h2>
 
-            <h1 style="color: #cbd5e0; text-align: center;">{{ post.title }}</h1>
-
-            <div style="white-space: pre-line; line-height: 1.6; color: #e2e8f0; font-size: 16px;">
-                {{ post.content }}
+            <div class="post-meta">
+                <strong>👤 Автор:</strong> <span class="author-badge">{{ post.author_login }}</span> |
+                <strong>📅 Создано:</strong> {{ post.created_at.strftime('%d.%m.%Y %H:%M') }} |
+                <strong>✏️ Обновлено:</strong> {{ post.updated_at.strftime('%d.%m.%Y %H:%M') }}
             </div>
 
-            <div class="meta">
-                <strong>Создано:</strong> {{ post.createdAt }}<br>
-                <strong>Обновлено:</strong> {{ post.updatedAt }}
+            <div class="post-text">
+                {{ post.content|replace('\n', '<br>')|safe }}
             </div>
 
-            <div style="text-align: center; margin-top: 30px;">
-                <a href="/edit/{{ post.id }}" class="btn" style="background: #4a5568; color: #cbd5e0;">РЕДАКТИРОВАТЬ РЕЦЕПТ</a>
+            <div class="actions">
+                <a href="/" class="btn btn-back">← НАЗАД К РЕЦЕПТАМ</a>
+                <button class="btn" onclick="toggleFavorite({{ post.id }})" id="favoriteBtn">
+                    ⭐ ДОБАВИТЬ В ИЗБРАННОЕ
+                </button>
+                <a href="/edit/{{ post.id }}" class="btn" id="editBtn" style="display: none;">✏️ РЕДАКТИРОВАТЬ</a>
+
+                <button class="btn btn-danger" onclick="deletePost({{ post.id }})" id="deleteBtn" style="display: none;">
+                    🗑️ УДАЛИТЬ
+                </button>
             </div>
         </div>
+        {% else %}
+        <div class="post-content" style="text-align: center;">
+            <h2>Рецепт не найден</h2>
+            <p>{{ error }}</p>
+            <a href="/" class="btn btn-back">Вернуться на главную</a>
+        </div>
+        {% endif %}
     </div>
+
+    <script>
+        // Проверяем, может ли пользователь редактировать/удалить пост
+        function checkPermissions() {
+            const token = localStorage.getItem('token');
+            const userId = localStorage.getItem('user_id');
+            const isAdmin = localStorage.getItem('is_admin') === 'true';
+            const postAuthorId = {{ post.author_id if post else 0 }};
+
+            const isAuthor = userId && postAuthorId == parseInt(userId);
+            const canEdit = isAuthor || isAdmin;
+
+            if (canEdit) {
+                document.getElementById('editBtn').style.display = 'inline-block';
+                document.getElementById('deleteBtn').style.display = 'inline-block';
+            }
+        }
+        // Загрузка статуса избранного для страницы поста
+        async function loadFavoriteStatus() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const postId = {{ post.id }};
+            try {
+                const response = await fetch(`/api/favorites/check/${postId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const favoriteBtn = document.getElementById('favoriteBtn');
+                    if (favoriteBtn) {
+                        if (data.is_favorite) {
+                            favoriteBtn.innerHTML = '⭐ В ИЗБРАННОМ';
+                            favoriteBtn.classList.add('active');
+                            favoriteBtn.onclick = () => removeFromFavorite(postId);
+                        } else {
+                            favoriteBtn.innerHTML = '⭐ ДОБАВИТЬ В ИЗБРАННОЕ';
+                            favoriteBtn.classList.remove('active');
+                            favoriteBtn.onclick = () => addToFavorite(postId);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки статуса избранного:', error);
+            }
+        }
+
+        // Добавить в избранное
+        async function addToFavorite(postId) {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            try {
+                const response = await fetch(`/api/favorites/${postId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    loadFavoriteStatus();
+                    alert('Рецепт добавлен в избранное!');
+                }
+            } catch (error) {
+                console.error('Ошибка добавления в избранное:', error);
+            }
+        }
+
+        // Удалить из избранного
+        async function removeFromFavorite(postId) {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            try {
+                const response = await fetch(`/api/favorites/${postId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    loadFavoriteStatus();
+                    alert('Рецепт удален из избранного');
+                }
+            } catch (error) {
+                console.error('Ошибка удаления из избранного:', error);
+            }
+        }
+
+        // Обновляем вызовы при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            checkPermissions();
+            loadFavoriteStatus();
+        });
+        // Удаление поста
+        async function deletePost(postId) {
+            if (!confirm('❓ Вы уверены, что хотите удалить этот рецепт? Это действие нельзя отменить.')) {
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Для удаления необходимо авторизоваться!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/posts/${postId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    alert('✅ Рецепт успешно удален!');
+                    window.location.href = '/';
+                } else {
+                    const error = await response.json();
+                    alert('❌ Ошибка: ' + error.detail);
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('❌ Ошибка при удалении рецепта');
+            }
+        }
+
+        // Проверяем права при загрузке страницы
+        document.addEventListener('DOMContentLoaded', checkPermissions);
+    </script>
 </body>
 </html>
