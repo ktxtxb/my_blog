@@ -67,6 +67,18 @@
         .btn:hover {
             background: #63b3d1;
         }
+        .btn-cancel {
+            background: #4a5568;
+            color: #cbd5e0;
+        }
+        .error {
+            color: #ff6b6b;
+            margin-top: 10px;
+        }
+        .success {
+            color: #51cf66;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -89,9 +101,11 @@
                     <textarea id="content" required>{{ post.content }}</textarea>
                 </div>
 
+                <div id="message"></div>
+
                 <div style="text-align: center;">
                     <button type="submit" class="btn">СОХРАНИТЬ ИЗМЕНЕНИЯ</button>
-                    <a href="/posts/{{ post.id }}" class="btn" style="background: #4a5568; color: #cbd5e0;">ОТМЕНА</a>
+                    <a href="/posts/{{ post.id }}" class="btn btn-cancel">ОТМЕНА</a>
                 </div>
             </form>
         </div>
@@ -100,23 +114,67 @@
     <script>
         document.getElementById('postForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+
+            const postId = '{{ post.id }}';
             const data = {
                 title: document.getElementById('title').value,
                 content: document.getElementById('content').value
             };
 
-            const response = await fetch('/api/posts/{{ post.id }}', {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = '🔄 Сохранение...';
+            messageDiv.className = 'success';
 
-            if (response.ok) {
-                alert('Рецепт обновлен!');
-                window.location.href = '/posts/{{ post.id }}';
-            } else {
-                const error = await response.json();
-                alert('Ошибка: ' + error.detail);
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    alert('❌ Для редактирования необходимо авторизоваться!');
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const response = await fetch(`/api/posts/${postId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    messageDiv.textContent = '✅ Рецепт успешно обновлен!';
+                    messageDiv.className = 'success';
+                    setTimeout(() => {
+                        window.location.href = `/posts/${postId}`;
+                    }, 1000);
+                } else {
+                    if (response.status === 401) {
+                        alert('❌ Ошибка авторизации. Пожалуйста, войдите снова.');
+                        localStorage.removeItem('token');
+                        window.location.href = '/login';
+                    } else if (response.status === 403) {
+                        const error = await response.json();
+                        messageDiv.textContent = '❌ Ошибка: ' + error.detail;
+                        messageDiv.className = 'error';
+                    } else {
+                        const error = await response.json();
+                        messageDiv.textContent = '❌ Ошибка: ' + error.detail;
+                        messageDiv.className = 'error';
+                    }
+                }
+            } catch (error) {
+                messageDiv.textContent = '❌ Ошибка сети: ' + error.message;
+                messageDiv.className = 'error';
+            }
+        });
+
+        // Проверяем авторизацию при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('❌ Для редактирования необходимо авторизоваться!');
+                window.location.href = '/login';
             }
         });
     </script>

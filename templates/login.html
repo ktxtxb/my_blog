@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Вход - БЛОГ СЕЛЕДКИ</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #1e3a5f;
+            color: #e0e0e0;
+        }
+        .container {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .header {
+            background: #2c5282;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+        .form-container {
+            background: #2d3748;
+            border: 2px solid #cbd5e0;
+            padding: 30px;
+            border-radius: 8px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #cbd5e0;
+            text-align: left;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #1a202c;
+            border: 1px solid #4a90a4;
+            color: #e2e8f0;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .btn {
+            background: #4a90a4;
+            color: #ffffff;
+            padding: 12px 25px;
+            text-decoration: none;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-block;
+            width: 100%;
+        }
+        .btn:hover { background: #63b3d1; }
+        .btn-register { background: #4a5568; }
+        .form-actions { text-align: center; margin-top: 20px; }
+        .error { color: #ff6b6b; margin-top: 10px; }
+        .success { color: #51cf66; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ВХОД В БЛОГ СЕЛЕДКИ</h1>
+        </div>
+
+        <div class="form-container">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">ЛОГИН:</label>
+                    <input type="text" id="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">ПАРОЛЬ:</label>
+                    <input type="password" id="password" required>
+                </div>
+
+                <div id="message" class="error"></div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn">ВОЙТИ</button>
+                    <a href="/register" class="btn btn-register">СОЗДАТЬ АККАУНТ</a>
+                    <a href="/" class="btn btn-register">← НА ГЛАВНУЮ</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new URLSearchParams();
+            formData.append('username', document.getElementById('username').value);
+            formData.append('password', document.getElementById('password').value);
+
+            try {
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Ошибка входа');
+                }
+
+                const result = await response.json();
+
+                // Сохраняем токен
+                localStorage.setItem('token', result.access_token);
+                localStorage.setItem('user_id', result.user_id);
+                localStorage.setItem('login', result.login);
+                localStorage.setItem('is_admin', result.is_admin);
+
+                document.getElementById('message').textContent = '✅ Вход успешен!';
+                document.getElementById('message').className = 'success';
+
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1000);
+
+            } catch (error) {
+                document.getElementById('message').textContent = '❌ Ошибка: ' + error.message;
+                document.getElementById('message').className = 'error';
+            }
+        });
+    </script>
+</body>
+</html>
