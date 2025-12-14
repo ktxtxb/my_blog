@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>БЛОГ СЕЛЕДКА</title>
+    <title>БЛОГ ПРО СЕЛЕДКИ</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -41,9 +41,20 @@
             font-weight: bold;
             margin: 5px;
             display: inline-block;
+            cursor: pointer;
         }
         .btn:hover {
             background: #63b3d1;
+        }
+        .btn-secondary {
+            background: #4a5568;
+            color: #cbd5e0;
+        }
+        .btn-danger {
+            background: #e53e3e;
+        }
+        .btn-success {
+            background: #38a169;
         }
         h1 {
             color: #cbd5e0;
@@ -55,32 +66,736 @@
             border-bottom: 1px solid #4a90a4;
             padding-bottom: 10px;
         }
+        .user-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: #2c5282;
+            border-radius: 5px;
+        }
+        .post-meta {
+            color: #a0aec0;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .nav-buttons {
+            margin-top: 15px;
+        }
+        .like-btn {
+            background: none;
+            border: 1px solid #e53e3e;
+            color: #e53e3e;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin: 5px;
+        }
+        .like-btn:hover {
+            background: #e53e3e;
+            color: white;
+        }
+        .like-btn.liked {
+            background: #e53e3e;
+            color: white;
+        }
+        .likes-count {
+            margin-left: 5px;
+            font-weight: bold;
+        }
+        .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .delete-btn {
+            background: #e53e3e;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .delete-btn:hover {
+            background: #c53030;
+        }
+        .edit-btn {
+            background: #38a169;
+            color: white;
+            padding: 8px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            display: inline-block;
+        }
+        .edit-btn:hover {
+            background: #2f855a;
+        }
+        .admin-badge {
+            background: #d69e2e;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        .search-result-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #4a5568;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .search-result-item:hover {
+            background: #4a5568;
+        }
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        .search-result-title {
+            font-weight: bold;
+            color: #cbd5e0;
+            margin-bottom: 5px;
+        }
+        .search-result-content {
+            color: #a0aec0;
+            font-size: 14px;
+        }
+        .search-result-author {
+            color: #4a90a4;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: #a0aec0;
+        }
+        .favorite-btn {
+            background: none;
+            border: 1px solid #d69e2e;
+            color: #d69e2e;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin: 5px;
+        }
+
+        .favorite-btn:hover {
+            background: #d69e2e;
+            color: white;
+        }
+
+        .favorite-btn.active {
+            background: #d69e2e;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="container">
-            <h1>БЛОГ СЕЛЕДКИ</h1>
-            <p>ПИШИ сюда рецепт любимой селедочки(МОЖНО с картошкой)</p>
+            <h1>🐟 БЛОГ СЕЛЕДКИ 🐟</h1>
+            <p>ПИШИ сюда рецепт любимой селедочки (МОЖНО с картошкой)</p>
+             <!-- ПОИСК ПОСТОВ -->
+        <div class="search-container" style="margin: 20px 0;">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="🔍 Поиск рецептов по названию или тексту..."
+                style="
+                    width: 100%;
+                    max-width: 500px;
+                    padding: 12px 20px;
+                    background: #1a202c;
+                    border: 2px solid #4a90a4;
+                    color: #e2e8f0;
+                    border-radius: 25px;
+                    font-size: 16px;
+                    outline: none;
+                "
+            >
+            <div id="searchResults" style="
+                display: none;
+                position: absolute;
+                background: #2d3748;
+                border: 2px solid #4a90a4;
+                border-radius: 8px;
+                max-height: 300px;
+                overflow-y: auto;
+                width: 100%;
+                max-width: 500px;
+                margin-top: 5px;
+                z-index: 1000;
+            "></div>
+        </div>
+            <div id="userNav" class="nav-buttons">
+                <a href="/login" class="btn btn-secondary">ВОЙТИ</a>
+                <a href="/register" class="btn btn-success">РЕГИСТРАЦИЯ</a>
+            </div>
+
+            <div id="userInfo" class="user-info" style="display: none;">
+                Привет, <span id="userLogin"></span><span id="adminBadge" class="admin-badge" style="display: none;">АДМИН</span>!
+                <a href="/create" class="btn">➕ НОВЫЙ РЕЦЕПТ</a>
+                <a href="/profile" class="btn">👤 ПРОФИЛЬ</a>
+                <button onclick="logout()" class="btn btn-danger">🚪 ВЫЙТИ</button>
+            </div>
         </div>
     </div>
 
     <div class="container">
-        {% for post in posts %}
-        <div class="post">
-            <h3>{{ post.title }}</h3>
-            <p style="color: #a0aec0;">{{ post.content[:100] }}{% if post.content|length > 100 %}...{% endif %}</p>
-            <div>
-                <a href="/posts/{{ post.id }}" class="btn">ЧИТАТЬ РЕЦЕПТ</a>
-                <a href="/edit/{{ post.id }}" class="btn" style="background: #4a5568; color: #cbd5e0;">РЕДАКТИРОВАТЬ</a>
+        <div id="postsContainer">
+            {% for post in posts %}
+            <div class="post" data-post-id="{{ post.id }}" data-author-id="{{ post.author_id }}">
+                <h3>{{ post.title }}</h3>
+                <div class="post-meta">
+                    📅 Создано: {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}
+                    {% if post.updated_at != post.created_at %}
+                    | ✏️ Обновлено: {{ post.updated_at.strftime('%d.%m.%Y %H:%M') }}
+                    {% endif %}
+                    | 👤 Автор: {{ post.author_login }}
+                </div>
+                <p style="color: #a0aec0;">{{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}</p>
+                <div class="post-actions">
+                    <a href="/posts/{{ post.id }}" class="btn">📖 ЧИТАТЬ РЕЦЕПТ</a>
+
+                    <!-- Кнопка редактирования - показывается только автору или админу -->
+                    <a href="/edit/{{ post.id }}" class="edit-btn" id="edit-btn-{{ post.id }}" style="display: none;">
+                        ✏️ РЕДАКТИРОВАТЬ
+                    </a>
+
+                    <button class="like-btn" onclick="toggleLike({{ post.id }})" id="like-btn-{{ post.id }}">
+                        ❤️ <span class="likes-count" id="likes-{{ post.id }}">0</span>
+                    </button>
+                    <button class="favorite-btn" onclick="toggleFavorite({{ post.id }})" id="favorite-btn-{{ post.id }}">
+                        ⭐
+                    </button>
+
+
+                    <!-- Кнопка удаления - показывается только автору или админу -->
+                    <button class="delete-btn" onclick="deletePost({{ post.id }})" id="delete-btn-{{ post.id }}" style="display: none;">
+                        🗑️ УДАЛИТЬ
+                    </button>
+                </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
 
         <div style="margin-top: 40px;">
-            <a href="/create" class="btn">НАПИСАТЬ РЕЦЕПТ</a>
-            <a href="/docs" class="btn" style="background: #4a5568; color: #cbd5e0;">API ДОКУМЕНТАЦИЯ</a>
+            <a href="/create" class="btn">✍️ НАПИСАТЬ РЕЦЕПТ</a>
+            <a href="/docs" class="btn btn-secondary">📚 API ДОКУМЕНТАЦИЯ</a>
         </div>
     </div>
+
+    <script>
+    let currentUserId = null;
+    let currentUserIsAdmin = false;
+
+    // Загружаем информацию о текущем пользователе
+    async function loadCurrentUserInfo() {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        try {
+            console.log('🔐 Loading user info...');
+
+            // Получаем логин из localStorage
+            const userLogin = localStorage.getItem('login');
+            console.log('👤 User login from localStorage:', userLogin);
+
+            if (!userLogin) {
+                console.log('❌ No user login in localStorage');
+                useLocalStorageData();
+                return;
+            }
+
+            // Получаем всех пользователей и находим нашего по логину
+            const response = await fetch('/api/users/', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const allUsers = await response.json();
+                console.log('📊 All users:', allUsers);
+
+                const currentUser = allUsers.find(user => user.login === userLogin);
+
+                if (currentUser) {
+                    currentUserId = currentUser.id;
+                    currentUserIsAdmin = currentUser.is_admin;
+
+                    // Сохраняем в localStorage
+                    localStorage.setItem('user_id', currentUser.id.toString());
+                    localStorage.setItem('is_admin', currentUser.is_admin.toString());
+
+                    console.log('✅ User info loaded successfully:', {
+                        id: currentUserId,
+                        login: currentUser.login,
+                        is_admin: currentUserIsAdmin
+                    });
+
+                    // Показываем бейдж админа
+                    if (currentUserIsAdmin) {
+                        document.getElementById('adminBadge').style.display = 'inline-block';
+                        console.log('🛡️ User is ADMIN - showing admin badge');
+                    }
+
+                    // Обновляем кнопки управления постами
+                    updatePostControls();
+                } else {
+                    console.error('❌ User not found in users list');
+                    useLocalStorageData();
+                }
+
+            } else {
+                console.error('❌ Failed to load users list:', response.status);
+                useLocalStorageData();
+            }
+
+        } catch (error) {
+            console.log('❌ Error loading user info:', error);
+            useLocalStorageData();
+        }
+    }
+
+    function useLocalStorageData() {
+        currentUserId = localStorage.getItem('user_id');
+
+        const storedIsAdmin = localStorage.getItem('is_admin');
+        currentUserIsAdmin = storedIsAdmin === 'true';
+
+        console.log('🔄 Using localStorage data:', {
+            id: currentUserId,
+            storedIsAdmin: storedIsAdmin,
+            currentUserIsAdmin: currentUserIsAdmin
+        });
+
+        if (currentUserIsAdmin) {
+            document.getElementById('adminBadge').style.display = 'inline-block';
+            console.log('🛡️ User is ADMIN from localStorage');
+        }
+        updatePostControls();
+    }
+
+    // Обновляем видимость кнопок редактирования/удаления
+    function updatePostControls() {
+        const posts = document.querySelectorAll('.post');
+        console.log(`🔄 Updating controls for ${posts.length} posts`);
+
+        posts.forEach(post => {
+            const postId = post.dataset.postId;
+            const authorId = parseInt(post.dataset.authorId);
+            const isAuthor = currentUserId && authorId === parseInt(currentUserId);
+            const canEdit = isAuthor || currentUserIsAdmin;
+            const canDelete = isAuthor || currentUserIsAdmin;
+
+            const editBtn = document.getElementById(`edit-btn-${postId}`);
+            const deleteBtn = document.getElementById(`delete-btn-${postId}`);
+
+            console.log(`📝 Post ${postId}: author=${authorId}, current=${currentUserId}, isAuthor=${isAuthor}, isAdmin=${currentUserIsAdmin}, canEdit=${canEdit}, canDelete=${canDelete}`);
+
+            // Кнопка редактирования - показывается ТОЛЬКО автору (не админу для чужих постов)
+            if (editBtn) {
+                editBtn.style.display = isAuthor ? 'inline-block' : 'none';
+                console.log(`✏️ Edit button for post ${postId}: ${isAuthor ? 'SHOW' : 'HIDE'}`);
+            }
+
+            // Кнопка удаления - показывается автору ИЛИ админу
+            if (deleteBtn) {
+                deleteBtn.style.display = canDelete ? 'inline-block' : 'none';
+                console.log(`🗑️ Delete button for post ${postId}: ${canDelete ? 'SHOW' : 'HIDE'}`);
+            }
+        });
+    }
+
+    // Проверяем авторизацию при загрузке
+    function checkAuth() {
+            const token = localStorage.getItem('token');
+            const userLogin = localStorage.getItem('login');
+            currentUserId = localStorage.getItem('user_id');
+
+            const storedIsAdmin = localStorage.getItem('is_admin');
+            currentUserIsAdmin = storedIsAdmin === 'true';
+
+            if (token && userLogin && currentUserId) {
+                document.getElementById('userNav').style.display = 'none';
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('userLogin').textContent = userLogin;
+
+                if (currentUserIsAdmin) {
+                    document.getElementById('adminBadge').style.display = 'inline-block';
+                }
+
+                loadCurrentUserInfo();
+                loadLikesInfo();
+                loadFavoritesStatus();
+            } else {
+                document.getElementById('userNav').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'none';
+            }
+            loadLikesCounts();
+        }
+
+    // Удаление поста
+    async function deletePost(postId) {
+        if (!confirm('❓ Вы уверены, что хотите удалить этот рецепт? Это действие нельзя отменить.')) {
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Для удаления необходимо авторизоваться!');
+            window.location.href = '/login';
+            return;
+        }
+
+        try {
+            console.log(`🗑️ Deleting post ${postId} as user ${currentUserId} (admin: ${currentUserIsAdmin})`);
+
+            const response = await fetch(`/api/posts/${postId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                alert('✅ Пост успешно удален');
+                // Удаляем пост из DOM
+                const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+                if (postElement) {
+                    postElement.remove();
+                }
+            } else {
+                const errorData = await response.json();
+                console.error('Ошибка удаления:', response.status, errorData);
+
+                if (response.status === 401) {
+                    alert('❌ Ошибка авторизации. Пожалуйста, войдите снова.');
+                    logout();
+                } else if (response.status === 403) {
+                    alert('❌ Ошибка: ' + errorData.detail);
+                } else if (response.status === 404) {
+                    alert('❌ Ошибка: ' + errorData.detail);
+                } else {
+                    alert('❌ Ошибка: ' + (errorData.detail || 'Неизвестная ошибка'));
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка сети:', error);
+            alert('❌ Ошибка сети: ' + error.message);
+        }
+    }
+
+    // Загрузка количества лайков
+    async function loadLikesCounts() {
+        const posts = document.querySelectorAll('.post');
+
+        for (const post of posts) {
+            const postId = post.dataset.postId;
+            try {
+                const response = await fetch(`/api/likes/post/${postId}/count`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById(`likes-${postId}`).textContent = data.likes_count;
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки лайков:', error);
+            }
+        }
+    }
+
+    // Загрузка информации о лайках пользователя
+    async function loadLikesInfo() {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const posts = document.querySelectorAll('.post');
+
+        for (const post of posts) {
+            const postId = post.dataset.postId;
+            try {
+                const response = await fetch(`/api/likes/post/${postId}/check`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const likeBtn = document.getElementById(`like-btn-${postId}`);
+                    if (likeBtn && data.liked) {
+                        likeBtn.classList.add('liked');
+                    }
+                } else if (response.status === 401) {
+                    console.log('Пользователь не авторизован для проверки лайков');
+                }
+            } catch (error) {
+                console.error('Ошибка проверки лайка:', error);
+            }
+        }
+    }
+
+    // Лайк
+    async function toggleLike(postId) {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Для оценки рецептов необходимо авторизоваться!');
+            window.location.href = '/login';
+            return;
+        }
+
+        try {
+            const likeBtn = document.getElementById(`like-btn-${postId}`);
+            const isLiked = likeBtn.classList.contains('liked');
+
+            if (isLiked) {
+                // Удаляем лайк
+                const response = await fetch(`/api/likes/${postId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    likeBtn.classList.remove('liked');
+                    loadLikesCounts();
+                } else {
+                    if (response.status === 401) {
+                        alert('❌ Ошибка авторизации. Пожалуйста, войдите снова.');
+                        logout();
+                    } else {
+                        alert('Ошибка удаления лайка');
+                    }
+                }
+            } else {
+                // Добавляем лайк
+                const response = await fetch('/api/likes/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ post_id: postId })
+                });
+
+                if (response.ok) {
+                    likeBtn.classList.add('liked');
+                    loadLikesCounts();
+                } else {
+                    if (response.status === 401) {
+                        alert('❌ Ошибка авторизации. Пожалуйста, войдите снова.');
+                        logout();
+                    } else {
+                        alert('Ошибка добавления лайка');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert('Ошибка при оценке рецепта');
+        }
+    }
+        async function toggleFavorite(postId) {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Для добавления в избранное необходимо авторизоваться!');
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                const favoriteBtn = document.getElementById(`favorite-btn-${postId}`);
+                const isFavorite = favoriteBtn.classList.contains('active');
+
+                if (isFavorite) {
+                    // Удаляем из избранного
+                    const response = await fetch(`/api/favorites/${postId}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.ok) {
+                        favoriteBtn.classList.remove('active');
+                        favoriteBtn.innerHTML = '⭐';
+                        showNotification('Рецепт удален из избранного', 'success');
+                    }
+                } else {
+                    // Добавляем в избранное
+                    const response = await fetch(`/api/favorites/${postId}`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.ok) {
+                        favoriteBtn.classList.add('active');
+                        favoriteBtn.innerHTML = '⭐ В ИЗБРАННОМ';
+                        showNotification('Рецепт добавлен в избранное!', 'success');
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка избранного:', error);
+                showNotification('Ошибка при работе с избранным', 'error');
+            }
+        }
+
+        // Проверка статуса избранного для постов
+        async function loadFavoritesStatus() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const posts = document.querySelectorAll('.post');
+
+            for (const post of posts) {
+                const postId = post.dataset.postId;
+                try {
+                    const response = await fetch(`/api/favorites/check/${postId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const favoriteBtn = document.getElementById(`favorite-btn-${postId}`);
+                        if (favoriteBtn && data.is_favorite) {
+                            favoriteBtn.classList.add('active');
+                            favoriteBtn.innerHTML = '⭐ В ИЗБРАННОМ';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Ошибка проверки избранного:', error);
+                }
+            }
+        }
+
+        // Уведомления
+        function showNotification(message, type) {
+            // Создаем уведомление
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background: ${type === 'success' ? '#38a169' : '#e53e3e'};
+                color: white;
+                border-radius: 5px;
+                z-index: 10000;
+                font-weight: bold;
+            `;
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            // Автоудаление через 3 секунды
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    // Выход
+    function logout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user_id');
+        localStorage.removeItem('login');
+        localStorage.removeItem('is_admin');
+        window.location.href = '/';
+    }
+
+    // Проверяем авторизацию при загрузке страницы
+    document.addEventListener('DOMContentLoaded', checkAuth);
+    let searchTimeout = null;
+
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const query = e.target.value.trim();
+        const resultsContainer = document.getElementById('searchResults');
+
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+        if (!query) {
+            resultsContainer.style.display = 'none';
+            return;
+        }
+
+            // Задержка перед поиском
+        searchTimeout = setTimeout(async () => {
+            try {
+                console.log(`🔍 Searching for: "${query}"`);
+                const response = await fetch(`/api/posts/search/?q=${encodeURIComponent(query)}`);
+
+                if (response.ok) {
+                    const results = await response.json();
+                    displaySearchResults(results, query);
+                } else {
+                    console.error('Search error:', response.status);
+                    resultsContainer.innerHTML = '<div class="no-results">Ошибка поиска</div>';
+                    resultsContainer.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                    resultsContainer.innerHTML = '<div class="no-results">Ошибка сети</div>';
+                    resultsContainer.style.display = 'block';
+                }
+            }, 300);
+        });
+
+        // Отображение результатов поиска
+        function displaySearchResults(results, query) {
+            const resultsContainer = document.getElementById('searchResults');
+
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<div class="no-results">😔 Рецепты не найдены</div>';
+                resultsContainer.style.display = 'block';
+                return;
+            }
+
+            let html = '';
+            results.forEach(post => {
+                // Подсветка найденного текста
+                const highlightedTitle = highlightText(post.title, query);
+                const highlightedContent = highlightText(post.content.substring(0, 150), query);
+
+                html += `
+                    <div class="search-result-item" onclick="openPost(${post.id})">
+                        <div class="search-result-title">${highlightedTitle}</div>
+                        <div class="search-result-content">${highlightedContent}${post.content.length > 150 ? '...' : ''}</div>
+                        <div class="search-result-author">👤 ${post.author_login}</div>
+                    </div>
+                `;
+            });
+
+            resultsContainer.innerHTML = html;
+            resultsContainer.style.display = 'block';
+        }
+
+        // Подсветка текста
+        function highlightText(text, query) {
+            if (!query) return text;
+
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<mark style="background: #f6e05e; color: #1a202c;">$1</mark>');
+        }
+
+        // Открытие поста из результатов поиска
+        function openPost(postId) {
+            window.location.href = `/posts/${postId}`;
+            // Скрываем результаты после выбора
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('searchInput').value = '';
+        }
+
+        // Скрываем результаты при клике вне поиска
+        document.addEventListener('click', function(e) {
+            const searchContainer = document.querySelector('.search-container');
+            const searchResults = document.getElementById('searchResults');
+
+            if (!searchContainer.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+</script>
 </body>
 </html>

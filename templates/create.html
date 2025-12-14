@@ -4,13 +4,15 @@
     <meta charset="UTF-8">
     <title>Создать рецепт - СЕЛЕДКА БЛОГ</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
             background: #1e3a5f;
             color: #e0e0e0;
-            text-align: center;
         }
         .container {
             max-width: 600px;
@@ -22,13 +24,13 @@
             padding: 20px;
             border-bottom: 3px solid #cbd5e0;
             margin-bottom: 30px;
+            text-align: center;
         }
         .form-container {
             background: #2d3748;
             border: 2px solid #cbd5e0;
             padding: 30px;
             border-radius: 8px;
-            text-align: left;
         }
         .form-group {
             margin-bottom: 20px;
@@ -38,8 +40,9 @@
             margin-bottom: 8px;
             font-weight: bold;
             color: #cbd5e0;
+            text-align: left;
         }
-        input, textarea, select {
+        input, textarea {
             width: 100%;
             padding: 12px;
             background: #1a202c;
@@ -47,6 +50,7 @@
             color: #e2e8f0;
             border-radius: 4px;
             font-size: 16px;
+            box-sizing: border-box;
         }
         textarea {
             height: 200px;
@@ -63,9 +67,36 @@
             margin: 5px;
             cursor: pointer;
             font-size: 16px;
+            display: inline-block;
         }
         .btn:hover {
             background: #63b3d1;
+        }
+        .btn-cancel {
+            background: #4a5568;
+            color: #cbd5e0;
+            text-decoration: none;
+        }
+        .form-actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .user-info {
+            background: #2c5282;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .error {
+            color: #ff6b6b;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .success {
+            color: #51cf66;
+            margin-top: 10px;
+            text-align: center;
         }
     </style>
 </head>
@@ -78,57 +109,103 @@
 
     <div class="container">
         <div class="form-container">
+            <!-- Информация о текущем пользователе -->
+            <div class="user-info" id="userInfo" style="display: none;">
+                <strong>Вы создаете рецепт как: </strong><span id="currentUser"></span>
+            </div>
+
             <form id="postForm">
                 <div class="form-group">
-                    <label>АВТОР:</label>
-                    <select id="authorId" required>
-                        {% for user in users %}
-                        <option value="{{ user.id }}">{{ user.login }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>НАЗВАНИЕ РЕЦЕПТА:</label>
+                    <label for="title">НАЗВАНИЕ РЕЦЕПТА:</label>
                     <input type="text" id="title" required placeholder="Введите название рецепта">
                 </div>
 
                 <div class="form-group">
-                    <label>РЕЦЕПТ:</label>
+                    <label for="content">РЕЦЕПТ:</label>
                     <textarea id="content" required placeholder="Опишите рецепт селедки..."></textarea>
                 </div>
 
-                <div style="text-align: center;">
-                    <button type="submit" class="btn">ОПУБЛИКОВАТЬ РЕЦЕПТ</button>
-                    <a href="/" class="btn" style="background: #4a5568; color: #cbd5e0;">ОТМЕНА</a>
+                <div id="message" class="error"></div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn">📝 ОПУБЛИКОВАТЬ РЕЦЕПТ</button>
+                    <a href="/" class="btn btn-cancel">❌ ОТМЕНА</a>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        document.getElementById('postForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const data = {
-                authorId: parseInt(document.getElementById('authorId').value),
-                title: document.getElementById('title').value,
-                content: document.getElementById('content').value
-            };
+    // Проверяем авторизацию и показываем информацию о пользователе
+    function checkAuth() {
+        const token = localStorage.getItem('token');
+        const userLogin = localStorage.getItem('login');
 
+        if (token && userLogin) {
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('currentUser').textContent = userLogin;
+        } else {
+            // Если пользователь не авторизован, перенаправляем на страницу входа
+            alert('Для создания рецепта необходимо авторизоваться!');
+            window.location.href = '/login';
+            return false;
+        }
+        return true;
+    }
+
+    // Обработка отправки формы
+    document.getElementById('postForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Проверяем авторизацию
+        if (!checkAuth()) {
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        const postData = {
+            title: document.getElementById('title').value,
+            content: document.getElementById('content').value
+        };
+
+        const messageDiv = document.getElementById('message');
+        messageDiv.textContent = '🔄 Публикация рецепта...';
+        messageDiv.className = 'success';
+
+        try {
             const response = await fetch('/api/posts/', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(postData)
             });
 
             if (response.ok) {
-                alert('Рецепт создан!');
-                window.location.href = '/';
+                messageDiv.textContent = '✅ Рецепт успешно опубликован!';
+                messageDiv.className = 'success';
+
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
             } else {
                 const error = await response.json();
-                alert('Ошибка: ' + error.detail);
+                messageDiv.textContent = '❌ Ошибка: ' + error.detail;
+                messageDiv.className = 'error';
             }
-        });
+        } catch (error) {
+            messageDiv.textContent = '❌ Ошибка сети: ' + error.message;
+            messageDiv.className = 'error';
+        }
+    });
+
+    // Проверяем авторизацию при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!checkAuth()) {
+            return;
+        }
+    });
     </script>
 </body>
 </html>
